@@ -1,32 +1,53 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>file.d documentation</title>
-  <link rel="icon" type="image/png" href="/file.d/static/file.d.png" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
-  <meta name="description" content="A blazing fast tool for building data pipelines: read, process, and output events.">
-  <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
-  <link rel="stylesheet" href="//unpkg.com/docsify/lib/themes/vue.css">
-</head>
-<body>
-  <div id="app"></div>
-  <script>
-    window.$docsify = {
-      name: 'file.d',
-      repo: 'https://github.com/ozontech/file.d',
-      loadSidebar: true,
-      loadNavbar: true,
-      subMaxLevel: 2,
-      maxLevel: 1,
-      coverpage: true,
-      auto2top: true,
-      markdown: {
-        gfm: true
-      }
-    }
-  </script>
-  <script src="//unpkg.com/docsify/lib/docsify.min.js"></script>
-  <script src="//unpkg.com/docsify-copy-code"></script>
-</body>
-</html>
+const express = require('express');
+const cors = require('cors');
+const bodyParser = require('body-parser');
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+app.use(cors());
+app.use(bodyParser.json());
+
+let properties = [];
+let idCounter = 1;
+
+// Get all properties
+app.get('/api/properties', (req, res) => {
+  res.json(properties);
+});
+
+// Add a new property
+app.post('/api/properties', (req, res) => {
+  const { type, purpose, address, price, description, contact } = req.body;
+  if (!type || !purpose || !address || !price || !contact) {
+    return res.status(400).json({ error: 'Missing required fields' });
+  }
+  const newProperty = {
+    id: idCounter++,
+    type,
+    purpose,
+    address,
+    price,
+    description: description || '',
+    contact,
+    createdAt: new Date(),
+  };
+  properties.push(newProperty);
+  res.status(201).json(newProperty);
+});
+
+// Delete a property
+app.delete('/api/properties/:id', (req, res) => {
+  const id = parseInt(req.params.id);
+  const index = properties.findIndex(p => p.id === id);
+  if (index === -1) {
+    return res.status(404).json({ error: 'Property not found' });
+  }
+  properties.splice(index, 1);
+  res.json({ success: true });
+});
+
+app.listen(PORT, () => {
+  console.log(`SK Agency backend running on port ${PORT}`);
+});
+
